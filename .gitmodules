@@ -1,0 +1,9 @@
+[submodule "logger"]
+	path = logger
+	url = https://github.com/oskarirauta/logcpp.git
+[submodule "common"]
+	path = common
+	url = https://github.com/oskarirauta/common_cpp.git
+[submodule "signal"]
+	path = signal
+	url = https://github.com/oskarirauta/signal_cpp.git
