@@ -55,6 +55,3 @@ struct speedtest_t {
 		}
 
 };
-
-extern speedtest_t *st;
-void st_update(void);
