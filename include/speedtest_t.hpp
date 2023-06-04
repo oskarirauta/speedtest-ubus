@@ -24,7 +24,7 @@ struct server_t {
 struct results_t {
 
 	public:
-		int ping = -1
+		int ping = -1;
 		int jitter = -1;
 		long latency = -1;
 		double download = -1;
