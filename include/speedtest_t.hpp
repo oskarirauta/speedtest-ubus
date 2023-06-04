@@ -15,8 +15,8 @@ struct server_t {
 	public:
 		std::string name, sponsor, host, country, country_code;
 		float lat, lon, distance;
-		int id;
-		long latency;
+		int id = -1;
+		long latency = -1;
 		bool recommended;
 
 };
@@ -24,12 +24,13 @@ struct server_t {
 struct results_t {
 
 	public:
-		int ping, jitter;
-		long latency;
-		double download;
-		double upload;
-		unsigned long received;
-		unsigned long sent;
+		int ping = -1
+		int jitter = -1;
+		long latency = -1;
+		double download = -1;
+		double upload = -1;
+		unsigned long received = 0;
+		unsigned long sent = 0;
 
 };
 
