@@ -34,7 +34,7 @@ objs/loop.o: src/loop.cpp
 objs/main.o: main.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
-speedtest-ubus: $(COMMON_OBJS) $(LOGGER_OBJS) $(SIGNAL_OBJS) $(JSON11_OBJS) $(OBJS)
+speedtest-ubus: $(COMMON_OBJS) $(LOGGER_OBJS) $(SIGNAL_OBJS) $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -L. $(LIBS) $^ -o $@;
 
 .PHONY: clean
