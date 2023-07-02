@@ -7,6 +7,3 @@
 [submodule "signal"]
 	path = signal
 	url = https://github.com/oskarirauta/signal_cpp.git
-[submodule "json11"]
-	path = json11
-	url = https://github.com/oskarirauta/json11cpp.git
