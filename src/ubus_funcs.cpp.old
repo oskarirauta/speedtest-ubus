@@ -1,3 +1,4 @@
+#include "logger.hpp"
 #include "ubus_funcs.hpp"
 
 const struct blobmsg_policy st_policy[] = {
@@ -18,16 +19,52 @@ const struct blobmsg_policy st_policy[] = {
 	[FIELD_RESULT_UPLOAD] = { .name = "result_upload", .type = BLOBMSG_TYPE_INT16 },
 	[FIELD_RESULT_UPLOAD_MB] = { .name = "result_upload_mb", .type = BLOBMSG_TYPE_INT16 },
 	[FIELD_RESULT_STATUS] = { .name = "result_status", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_STATE] = { .name = "state", .type = BLOBMSG_TYPE_STRING },	
+	[FIELD_STATE] = { .name = "state", .type = BLOBMSG_TYPE_STRING },
 };
 
 int st_policy_size(void) {
 	return ARRAY_SIZE(st_policy);
 }
 
+int ubus_st_get2(const std::string& method, const std::string& msg, std::string& result) {
+	std::cout << "called ubus_st_get2 with method " << method << std::endl;
+
+	if ( !msg.empty())
+		std::cout << "received message: " << msg << std::endl;
+
+	json::JSON json_msg = json::JSON::Load(msg);
+	if ( json_msg.size() != 0 )
+		std::cout << "received json: " << json_msg << std::endl;
+
+	json::JSON answer;
+	answer["ping"] = "pong";
+	result = answer.dumpMinified();
+
+	std::cout << "replying: " << answer << std::endl;
+
+	return 0;
+}
+
+int ubus_st_list2(const std::string& method, const std::string& msg, std::string& result) {
+	std::cout << "called ubus_st_list2 with method " << method << std::endl;
+	return 0;
+}
+
 int ubus_st_get(struct ubus_context *ctx, struct ubus_object *obj,
 		struct ubus_request_data *req, const char *method,
 		struct blob_attr *msg) {
+
+	logger::vverbose << "get called!" << std::endl;
+
+	if ( blob_len(msg) > 0 ) {
+		std::error_code err;
+		std::string _msg(blobmsg_format_json(msg, true));
+		json::JSON _json;
+		if ( !_msg.empty())
+			_json = json::JSON::Load(_msg);
+		if ( !err )
+			std::cout << "parsed:\n" << _json.dump() << std::endl;
+	}
 
 	return 0;
 }
@@ -42,6 +79,20 @@ int ubus_st_list(struct ubus_context *ctx, struct ubus_object *obj,
 int ubus_st_trigger(struct ubus_context *ctx, struct ubus_object *obj,
 		struct ubus_request_data *req, const char *method,
 		struct blob_attr *msg) {
+
+	return 0;
+}
+
+int ubus_st_test(const std::string& method, const std::string& msg, std::string& result) {
+
+	logger::vverbose << "test called!" << std::endl;
+
+	if ( !msg.empty()) {
+		std::error_code err;
+		json::JSON json_msg = json::JSON::Load(msg, err);
+		if ( !err )
+			std::cout << "parsed: " << json_msg << std::endl;
+	}
 
 	return 0;
 }

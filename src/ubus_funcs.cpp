@@ -1,40 +1,19 @@
+#include "json.hpp"
 #include "logger.hpp"
+
 #include "ubus_funcs.hpp"
 
-const struct blobmsg_policy st_policy[] = {
-	[FIELD_CLIENT_IP] = { .name = "ipaddr", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_CLIENT_LAT] = { .name = "lat", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_CLIENT_LON] = { .name = "lon", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_CLIENT_ISP] = { .name = "isp", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_SERVER_ID] = { .name = "server_id", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_SERVER_NAME] = { .name = "server_name", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_SERVER_SPONSOR] = { .name = "server_sponsor", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_SERVER_DISTANCE] = { .name = "server_distance", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_SERVER_LATENCY] = { .name = "server_latency", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_SERVER_HOST] = { .name = "server_host", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_RESULT_PING] = { .name = "result_ping", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_JITTER] = { .name = "result_jitter", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_DOWNLOAD] = { .name = "result_download", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_DOWNLOAD_MB] = { .name = "result_download_mb", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_UPLOAD] = { .name = "result_upload", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_UPLOAD_MB] = { .name = "result_upload_mb", .type = BLOBMSG_TYPE_INT16 },
-	[FIELD_RESULT_STATUS] = { .name = "result_status", .type = BLOBMSG_TYPE_STRING },
-	[FIELD_STATE] = { .name = "state", .type = BLOBMSG_TYPE_STRING },
-};
+int ubus_get(const std::string& method, const std::string& msg, std::string& result) {
 
-int st_policy_size(void) {
-	return ARRAY_SIZE(st_policy);
-}
+	std::cout << "called ubus_get with method " << method << std::endl;
 
-int ubus_st_get2(const std::string& method, const std::string& msg, std::string& result) {
-	std::cout << "called ubus_st_get2 with method " << method << std::endl;
-
-	if ( !msg.empty())
+	if ( !msg.empty()) {
 		std::cout << "received message: " << msg << std::endl;
 
-	json::JSON json_msg = json::JSON::Load(msg);
-	if ( json_msg.size() != 0 )
-		std::cout << "received json: " << json_msg << std::endl;
+		json::JSON json_msg = json::JSON::Load(msg);
+		if ( json_msg.size() != 0 )
+			std::cout << "received json: " << json_msg << std::endl;
+	}
 
 	json::JSON answer;
 	answer["ping"] = "pong";
@@ -45,54 +24,26 @@ int ubus_st_get2(const std::string& method, const std::string& msg, std::string&
 	return 0;
 }
 
-int ubus_st_list2(const std::string& method, const std::string& msg, std::string& result) {
-	std::cout << "called ubus_st_list2 with method " << method << std::endl;
+int ubus_list(const std::string& method, const std::string& msg, std::string& result) {
+	std::cout << "called ubus_list with method " << method << std::endl;
+	result = "{\"list\":[1,2,3,4,5]}";
 	return 0;
 }
 
-int ubus_st_get(struct ubus_context *ctx, struct ubus_object *obj,
-		struct ubus_request_data *req, const char *method,
-		struct blob_attr *msg) {
+int ubus_test(const std::string& method, const std::string& msg, std::string& result) {
 
-	logger::vverbose << "get called!" << std::endl;
-
-	if ( blob_len(msg) > 0 ) {
-		std::error_code err;
-		std::string _msg(blobmsg_format_json(msg, true));
-		json::JSON _json;
-		if ( !_msg.empty())
-			_json = json::JSON::Load(_msg);
-		if ( !err )
-			std::cout << "parsed:\n" << _json.dump() << std::endl;
-	}
-
-	return 0;
-}
-
-int ubus_st_list(struct ubus_context *ctx, struct ubus_object *obj,
-		struct ubus_request_data *req, const char *method,
-		struct blob_attr *msg) {
-
-	return 0;
-}
-
-int ubus_st_trigger(struct ubus_context *ctx, struct ubus_object *obj,
-		struct ubus_request_data *req, const char *method,
-		struct blob_attr *msg) {
-
-	return 0;
-}
-
-int ubus_st_test(const std::string& method, const std::string& msg, std::string& result) {
-
-	logger::vverbose << "test called!" << std::endl;
+	logger::vverbose << "called ubus_test with method " << method << std::endl;
 
 	if ( !msg.empty()) {
-		std::error_code err;
-		json::JSON json_msg = json::JSON::Load(msg, err);
-		if ( !err )
-			std::cout << "parsed: " << json_msg << std::endl;
-	}
+
+		json::JSON json_msg = json::JSON::Load(msg);
+		if ( json_msg.size() != 0 ) {
+			std::cout << "received json: " << json_msg << std::endl;
+			result = "{\"test\":" + json_msg.dumpMinified() + "}";
+		} else result = "{\"test\":\"failed to get args\"}";
+	} else result = "{\"test\":\"args missing\"}";
+
+	std::cout << "replying: " << result << std::endl;
 
 	return 0;
 }

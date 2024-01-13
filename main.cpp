@@ -8,12 +8,16 @@
 #include "logger.hpp"
 #include "loop.hpp"
 #include "ubus.hpp"
+#include "ubus_funcs.hpp"
 
 speedtest_t *sp;
+std::mutex sp_mutex;
 
 static void die_handler(int signum) {
 
-	logger::info << "received " << Signal::string(signum == SIGINT ? SIGTERM : signum) << " signal" << std::endl;
+	if ( logger::log_level >= logger::verbose.id())
+		logger::info << "received " << Signal::string(signum) << " signal" << std::endl;
+	else logger::info << "received TERM signal" << std::endl;
 
 	if ( !uloop_cancelled ) {
 		logger::verbose << "stopping ubus service" << std::endl;
@@ -23,11 +27,7 @@ static void die_handler(int signum) {
 
 int main(const int argc, const char **argv) {
 
-	logger::output_level[logger::type::info] = true;
-	logger::output_level[logger::type::error] = true;
-	logger::output_level[logger::type::verbose] = true;
-	logger::output_level[logger::type::vverbose] = true;
-	logger::output_level[logger::type::debug] = true;
+	logger::loglevel(logger::debug);
 
 	sp = new speedtest_t;
 
@@ -36,20 +36,29 @@ int main(const int argc, const char **argv) {
 	Signal::register_handler(die_handler);
 
 	uloop_init();
-	ctx = ubus_connect(ubus_socket == "" ? NULL : ubus_socket.c_str());
+	ubus::service *srv;
 
-	if ( !ctx ) {
-		logger::error << "failed to connect to ubus socket " << ubus_socket << std::endl;
+	try {
+		srv = new ubus::service;
+	} catch ( ubus::exception &e ) {
+		logger::error << e.what() << std::endl;
 		delete sp;
-		return -1;
+		return e.code();
 	}
 
-	ubus_add_uloop(ctx);
+	try {
+		srv -> add_object("network.speedtest", {
 
-	if ( int ret = ubus_create(); ret != 0 ) {
-		ubus_free(ctx);
+			UBUS_HANDLER("test", ubus_test),
+			UBUS_HANDLER("get", ubus_get),
+			UBUS_HANDLER("list", ubus_list),
+		});
+
+	} catch ( ubus::exception &e ) {
+		logger::error << "failed to add ubus object: " <<
+				e.what() << " (code " << e.code() << ")" << std::endl;
 		delete sp;
-		return(ret);
+		return e.code();
 	}
 
 	logger::verbose << "starting main loop" << std::endl;
@@ -59,7 +68,7 @@ int main(const int argc, const char **argv) {
 	uloop_run();
 
 	uloop_done();
-	ubus_free(ctx);
+	delete srv;
 
 	logger::verbose << "ubus service has stopped" << std::endl;
 	logger::vverbose << "exiting main loop" << std::endl;
@@ -74,7 +83,6 @@ int main(const int argc, const char **argv) {
 	loop_thread.join();
 
 	delete sp;
-
 	logger::vverbose << "exiting" << std::endl;
 
 	return 0;
